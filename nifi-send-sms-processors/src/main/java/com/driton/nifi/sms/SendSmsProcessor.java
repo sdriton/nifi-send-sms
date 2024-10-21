@@ -63,12 +63,6 @@ public class SendSmsProcessor extends AbstractProcessor {
             .defaultValue("us-east-1")
             .build();
 
-//    public static final PropertyDescriptor MESSAGE = new PropertyDescriptor.Builder()
-//            .name("SMS Message")
-//            .description("The SMS message to send")
-//            .required(false)
-//            .build();
-
     public static final Relationship REL_SUCCESS = new Relationship.Builder()
             .name("success")
             .description("All FlowFiles that successfully send an SMS are routed to this relationship")
@@ -88,7 +82,6 @@ public class SendSmsProcessor extends AbstractProcessor {
         descriptors.add(AWS_ACCESS_KEY);
         descriptors.add(AWS_SECRET_KEY);
         descriptors.add(AWS_REGION);
-//        descriptors.add(MESSAGE);
         this.descriptors = Collections.unmodifiableList(descriptors);
 
         final Set<Relationship> relationships = Set.of(REL_SUCCESS, REL_FAILURE);
@@ -116,11 +109,7 @@ public class SendSmsProcessor extends AbstractProcessor {
         final String accessKey = context.getProperty(AWS_ACCESS_KEY).getValue();
         final String secretKey = context.getProperty(AWS_SECRET_KEY).getValue();
         final String region = context.getProperty(AWS_REGION).getValue();
-//        final String message = context.getProperty(MESSAGE).getValue();
 
-//        SnsClient snsClient = SnsClient.builder()
-//                .region(software.amazon.awssdk.regions.Region.of(region))
-//                .build();
         SnsClient snsClient = SnsClient.builder()
                 .region(Region.of(region))
                 .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey)))
