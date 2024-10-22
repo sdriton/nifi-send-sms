@@ -27,7 +27,7 @@ public class SendSmsProcessorTest {
 
     @BeforeEach
     public void init() {
-        testRunner = TestRunners.newTestRunner(SendSmsProcessor.class);
+        testRunner = TestRunners.newTestRunner(PutSmsProcessor.class);
     }
 
     @Test

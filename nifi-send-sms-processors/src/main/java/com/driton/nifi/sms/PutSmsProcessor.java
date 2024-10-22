@@ -39,7 +39,7 @@ import software.amazon.awssdk.services.sns.model.PublishResponse;
     @WritesAttribute(attribute = "aws.sms.status", description = "Status of the SMS message sent through AWS SNS"),
     @WritesAttribute(attribute = "aws.sms.error", description = "Error details if the SMS failed to send")
 })
-public class SendSmsProcessor extends AbstractProcessor {
+public class PutSmsProcessor extends AbstractProcessor {
 
     public static final PropertyDescriptor AWS_ACCESS_KEY = new PropertyDescriptor.Builder()
             .name("AWS Access Key")
