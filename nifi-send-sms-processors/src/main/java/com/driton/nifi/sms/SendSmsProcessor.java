@@ -32,7 +32,9 @@ import software.amazon.awssdk.services.sns.model.PublishRequest;
 import software.amazon.awssdk.services.sns.model.PublishResponse;
 
 @Tags({"aws", "sns", "sms", "notification", "amazon"})
-@CapabilityDescription("Sends an SMS message to each phone number retrieved from the incoming flow file using AWS SNS.")
+@CapabilityDescription("Sends an SMS message to each phone number retrieved from the incoming Flowfile using AWS SNS. "
+		+ "The incoming Flowfile has to be in a json format."
+		+ "/nExample: {\"to\": [\"+15143334444\",\"+15143334445\"], \"body\": \"SMS Message\"}")
 @WritesAttributes({
     @WritesAttribute(attribute = "aws.sms.status", description = "Status of the SMS message sent through AWS SNS"),
     @WritesAttribute(attribute = "aws.sms.error", description = "Error details if the SMS failed to send")
