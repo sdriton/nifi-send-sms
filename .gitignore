@@ -1,6 +1,7 @@
 .DS_Store
 
 .git
+.vscode
 
 # Compiled class file
 *.class
