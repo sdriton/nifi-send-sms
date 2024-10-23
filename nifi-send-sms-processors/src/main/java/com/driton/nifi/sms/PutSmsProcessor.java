@@ -31,13 +31,13 @@ import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sns.model.PublishRequest;
 import software.amazon.awssdk.services.sns.model.PublishResponse;
 
-@Tags({"aws", "sns", "sms", "notification", "amazon"})
+@Tags({ "aws", "sns", "sms", "notification", "amazon" })
 @CapabilityDescription("Sends an SMS message to each phone number retrieved from the incoming Flowfile using AWS SNS. "
-		+ "The incoming Flowfile has to be in a json format."
-		+ "/nExample: {\"to\": [\"+15143334444\",\"+15143334445\"], \"body\": \"SMS Message\"}")
+        + "The incoming Flowfile has to be in a json format."
+        + "/nExample: {\"to\": [\"+15143334444\",\"+15143334445\"], \"body\": \"SMS Message\"}")
 @WritesAttributes({
-    @WritesAttribute(attribute = "aws.sms.status", description = "Status of the SMS message sent through AWS SNS"),
-    @WritesAttribute(attribute = "aws.sms.error", description = "Error details if the SMS failed to send")
+        @WritesAttribute(attribute = "aws.sms.status", description = "Status of the SMS message sent through AWS SNS"),
+        @WritesAttribute(attribute = "aws.sms.error", description = "Error details if the SMS failed to send")
 })
 public class PutSmsProcessor extends AbstractProcessor {
 
@@ -117,9 +117,10 @@ public class PutSmsProcessor extends AbstractProcessor {
                 .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey)))
                 .build();
 
-        // Use an array to hold the flowFile, to work around final/effectively final issue
+        // Use an array to hold the flowFile, to work around final/effectively final
+        // issue
         final FlowFile[] flowFileHolder = new FlowFile[] { flowFile };
-        
+
         // Read JSON content from the incoming flow file
         try (InputStream inputStream = session.read(flowFile)) {
             ObjectMapper objectMapper = new ObjectMapper();
@@ -142,10 +143,12 @@ public class PutSmsProcessor extends AbstractProcessor {
 
                     PublishResponse response = snsClient.publish(request);
                     logger.info("SMS sent to {}: {}", phoneNumber, response.messageId());
-                    flowFileHolder[0] = session.putAttribute(flowFileHolder[0], "aws.sms.status", "SMS sent to " + phoneNumber);
+                    flowFileHolder[0] = session.putAttribute(flowFileHolder[0], "aws.sms.status",
+                            "SMS sent to " + phoneNumber);
                 } catch (Exception e) {
                     logger.error("Failed to send SMS to {}: {}", phoneNumber, e.getMessage());
-                    flowFileHolder[0] = session.putAttribute(flowFileHolder[0], "aws.sms.error", "Failed to send SMS to " + phoneNumber + ": " + e.getMessage());
+                    flowFileHolder[0] = session.putAttribute(flowFileHolder[0], "aws.sms.error",
+                            "Failed to send SMS to " + phoneNumber + ": " + e.getMessage());
                     session.transfer(flowFileHolder[0], REL_FAILURE);
                     return;
                 }
