@@ -23,8 +23,8 @@ Below is provided a sample Flowfile content that is required by the PutSms proce
 
 ```
 { 
-    "to": "["+15148887777","+15148887779"]",
-	"body": "SMS Message."
+  "to": "["+15148887777","+15148887779"]",
+  "body": "SMS Message."
 }
 ```
 
@@ -32,4 +32,4 @@ Below is provided a sample Flowfile content that is required by the PutSms proce
 
 * **AWS Access Key** - _\[Your Access Key\]_
 * **AWS Secret Key** - _\[Your Secret Key\]_
-* **AWS Region** - _\[us-east-1\]_
+* **AWS Region** - _\[your region (us-east-1)\]_

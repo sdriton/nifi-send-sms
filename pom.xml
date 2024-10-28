@@ -1,34 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Licensed to the Apache Software Foundation (ASF) under one or more
-  contributor license agreements. See the NOTICE file distributed with
-  this work for additional information regarding copyright ownership.
-  The ASF licenses this file to You under the Apache License, Version 2.0
-  (the "License"); you may not use this file except in compliance with
-  the License. You may obtain a copy of the License at
-  http://www.apache.org/licenses/LICENSE-2.0
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
+    Copyright 2024 Driton Salihu
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License. 
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-	
+
     <parent>
         <groupId>org.apache.nifi</groupId>
         <artifactId>nifi-extension-bundles</artifactId>
         <version>2.0.0-M4</version>
     </parent>
-	
+
     <groupId>com.driton.nifi</groupId>
     <artifactId>nifi-send-sms</artifactId>
-    <version>2.0.0-M4</version>
     <packaging>pom</packaging>
-	
+
     <modules>
         <module>nifi-send-sms-processors</module>
         <module>nifi-send-sms-nar</module>
@@ -41,51 +40,43 @@
             <artifactId>nifi-api</artifactId>
             <scope>provided</scope>
         </dependency>
-        
+
 
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.18.0</version>
         </dependency>
-        <!-- AWS SDK -->
-        <!-- https://mvnrepository.com/artifact/software.amazon.awssdk/core -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>core</artifactId>
             <version>2.26.8</version>
             <type>pom</type>
         </dependency>
-		
+
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>sns</artifactId>
-            <!-- <version>2.26.8</version> -->
         </dependency>
-		
+
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>auth</artifactId>
-            <!-- <version>2.26.8</version> -->
         </dependency>
-		
+
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>regions</artifactId>
-            <!-- <version>2.26.8</version> -->
         </dependency>
-		
+
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>http-client-spi</artifactId>
-            <!-- <version>2.26.8</version> -->
         </dependency>
-		
+
         <!-- Logging -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.7.30</version>
         </dependency>
     </dependencies>
 </project>

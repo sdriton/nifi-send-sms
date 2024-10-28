@@ -1,3 +1,18 @@
+/* 
+    Copyright 2024 Driton Salihu
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License. 
+*/
 package com.driton.nifi.sms;
 
 import java.io.InputStream;
@@ -32,9 +47,11 @@ import software.amazon.awssdk.services.sns.model.PublishRequest;
 import software.amazon.awssdk.services.sns.model.PublishResponse;
 
 @Tags({ "aws", "sns", "sms", "notification", "amazon" })
-@CapabilityDescription("Sends an SMS message to each phone number retrieved from the incoming Flowfile using AWS SNS. "
-        + "The incoming Flowfile has to be in a json format."
-        + "/nExample: {\"to\": [\"+15143334444\",\"+15143334445\"], \"body\": \"SMS Message\"}")
+@CapabilityDescription("This Processor sends SMS messages to each phone number provided in the incoming Flowfile. " 
+            + "It uses the Amazon AWS SNS Service SDK. The incoming Flowfile has to be in a json format. "
+            + "Content of the incoming message is written to the content of the outgoing Flowfile. "
+            +"Below is provided a sample Flowfile content that is required by the PutSms processor:"
+            + "\nExample: {\"to\": [\"+15143334444\",\"+15143334445\"], \"body\": \"SMS Message\"}")
 @WritesAttributes({
         @WritesAttribute(attribute = "aws.sms.status", description = "Status of the SMS message sent through AWS SNS"),
         @WritesAttribute(attribute = "aws.sms.error", description = "Error details if the SMS failed to send")
