@@ -18,6 +18,7 @@ package com.driton.nifi.sms;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -47,64 +48,50 @@ import software.amazon.awssdk.services.sns.model.PublishRequest;
 import software.amazon.awssdk.services.sns.model.PublishResponse;
 
 @Tags({ "aws", "sns", "sms", "notification", "amazon" })
-@CapabilityDescription("This Processor sends SMS messages to each phone number provided in the incoming Flowfile. " 
-            + "It uses the Amazon AWS SNS Service SDK. The incoming Flowfile has to be in a json format. "
-            + "Content of the incoming message is written to the content of the outgoing Flowfile. "
-            +"Below is provided a sample Flowfile content that is required by the PutSms processor:"
-            + "\nExample: {\"to\": [\"+15143334444\",\"+15143334445\"], \"body\": \"SMS Message\"}")
+@CapabilityDescription("This Processor sends SMS messages to each phone number provided in the incoming Flowfile. "
+        + "It uses the Amazon AWS SNS Service SDK. The incoming Flowfile has to be in a json format. "
+        + "Content of the incoming message is written to the content of the outgoing Flowfile. "
+        + "Below is provided a sample Flowfile content that is required by the PutSms processor:"
+        + "\nExample: {\"to\": [\"+15143334444\",\"+15143334445\"], \"body\": \"SMS Message\"}")
 @WritesAttributes({
         @WritesAttribute(attribute = "aws.sms.status", description = "Status of the SMS message sent through AWS SNS"),
-        @WritesAttribute(attribute = "aws.sms.error", description = "Error details if the SMS failed to send")
-})
+        @WritesAttribute(attribute = "aws.sms.error", description = "Error details if the SMS failed to send") })
 public class PutSmsProcessor extends AbstractProcessor {
+    private ComponentLog logger = null;
+    public static final PropertyDescriptor AWS_ACCESS_KEY = new PropertyDescriptor.Builder().name("AWS Access Key")
+            .description("AWS Access Key for SNS").required(true).addValidator(StandardValidators.NON_BLANK_VALIDATOR)
+            .sensitive(true).build();
 
-    public static final PropertyDescriptor AWS_ACCESS_KEY = new PropertyDescriptor.Builder()
-            .name("AWS Access Key")
-            .description("AWS Access Key for SNS")
-            .required(true)
-            .addValidator(StandardValidators.NON_BLANK_VALIDATOR)
-            .sensitive(true)
-            .build();
+    public static final PropertyDescriptor AWS_SECRET_KEY = new PropertyDescriptor.Builder().name("AWS Secret Key")
+            .description("AWS Secret Key for SNS").required(true).addValidator(StandardValidators.NON_BLANK_VALIDATOR)
+            .sensitive(true).build();
 
-    public static final PropertyDescriptor AWS_SECRET_KEY = new PropertyDescriptor.Builder()
-            .name("AWS Secret Key")
-            .description("AWS Secret Key for SNS")
-            .required(true)
-            .addValidator(StandardValidators.NON_BLANK_VALIDATOR)
-            .sensitive(true)
-            .build();
+    public static final PropertyDescriptor AWS_REGION = new PropertyDescriptor.Builder().name("AWS Region")
+            .description("The AWS region to use").required(true).addValidator(StandardValidators.NON_BLANK_VALIDATOR)
+            .defaultValue("us-east-1").build();
 
-    public static final PropertyDescriptor AWS_REGION = new PropertyDescriptor.Builder()
-            .name("AWS Region")
-            .description("The AWS region to use")
-            .required(true)
-            .addValidator(StandardValidators.NON_BLANK_VALIDATOR)
-            .defaultValue("us-east-1")
-            .build();
+    public static final Relationship REL_SUCCESS = new Relationship.Builder().name("success")
+            .description("All FlowFiles that successfully send an SMS are routed to this relationship").build();
 
-    public static final Relationship REL_SUCCESS = new Relationship.Builder()
-            .name("success")
-            .description("All FlowFiles that successfully send an SMS are routed to this relationship")
-            .build();
+    public static final Relationship REL_FAILURE = new Relationship.Builder().name("failure")
+            .description("FlowFiles that fail to send an SMS are routed to this relationship").build();
 
-    public static final Relationship REL_FAILURE = new Relationship.Builder()
-            .name("failure")
-            .description("FlowFiles that fail to send an SMS are routed to this relationship")
-            .build();
+    private static final String STATUS_SUCCESS = "Success";
+    private static final String STATUS_FAILED = "Failed";
+    private static final String SMS_RESPONSE_STATUS = "SmsResponseStatus";
+    private static final String SMS_RESPONSE_MESSAGE = "SmsResponseMessage";
 
     private List<PropertyDescriptor> descriptors;
     private Set<Relationship> relationships;
 
     @Override
     protected void init(final ProcessorInitializationContext context) {
-        final List<PropertyDescriptor> descriptors = new ArrayList<>();
-        descriptors.add(AWS_ACCESS_KEY);
-        descriptors.add(AWS_SECRET_KEY);
-        descriptors.add(AWS_REGION);
-        this.descriptors = Collections.unmodifiableList(descriptors);
+        final List<PropertyDescriptor> descLst =  List.of(AWS_ACCESS_KEY, AWS_SECRET_KEY, AWS_REGION);
+        this.descriptors = Collections.unmodifiableList(descLst);
 
-        final Set<Relationship> relationships = Set.of(REL_SUCCESS, REL_FAILURE);
-        this.relationships = Collections.unmodifiableSet(relationships);
+        final Set<Relationship> relLst = Set.of(REL_SUCCESS, REL_FAILURE);
+        this.relationships = Collections.unmodifiableSet(relLst);
+        this.logger = getLogger();
     }
 
     @Override
@@ -123,8 +110,7 @@ public class PutSmsProcessor extends AbstractProcessor {
         if (flowFile == null) {
             return;
         }
-
-        final ComponentLog logger = getLogger();
+            
         final String accessKey = context.getProperty(AWS_ACCESS_KEY).getValue();
         final String secretKey = context.getProperty(AWS_SECRET_KEY).getValue();
         final String region = context.getProperty(AWS_REGION).getValue();
@@ -145,32 +131,26 @@ public class PutSmsProcessor extends AbstractProcessor {
 
             // Extract phone numbers (as a list of strings) from the "to" field
             String toField = jsonNode.get("to").asText();
+            @SuppressWarnings("unchecked")
             List<String> phoneNumbers = objectMapper.readValue(toField, List.class);
 
             // Extract the message body from the "body" field
             String messageBody = jsonNode.get("body").asText();
 
             // Send SMS to each phone number
+            // If send sms for a number fails just put an attribute to the flowfile and 
+            // continue processing the rest of the phone numbers.
+            // The flow will fail if an exception is thrown.
             for (String phoneNumber : phoneNumbers) {
-                try {
-                    PublishRequest request = PublishRequest.builder()
-                            .message(messageBody)
-                            .phoneNumber(phoneNumber)
-                            .build();
-
-                    PublishResponse response = snsClient.publish(request);
-                    logger.info("SMS sent to {}: {}", phoneNumber, response.messageId());
-                    flowFileHolder[0] = session.putAttribute(flowFileHolder[0], "aws.sms.status",
-                            "SMS sent to " + phoneNumber);
-                } catch (Exception e) {
-                    logger.error("Failed to send SMS to {}: {}", phoneNumber, e.getMessage());
-                    flowFileHolder[0] = session.putAttribute(flowFileHolder[0], "aws.sms.error",
-                            "Failed to send SMS to " + phoneNumber + ": " + e.getMessage());
-                    session.transfer(flowFileHolder[0], REL_FAILURE);
-                    return;
+                HashMap<String, String> response = doSendSms(snsClient, phoneNumber, messageBody);
+                
+                String responseStatus = response.get(SMS_RESPONSE_STATUS);
+                if(STATUS_FAILED.equals(responseStatus)) {
+                    flowFileHolder[0] = session.putAttribute(flowFileHolder[0], "aws.sms.error."+phoneNumber, response.get(SMS_RESPONSE_MESSAGE));
+                } else if(STATUS_SUCCESS.equals(responseStatus)){
+                    flowFileHolder[0] = session.putAttribute(flowFileHolder[0], "aws.sms.status."+phoneNumber, response.get(SMS_RESPONSE_MESSAGE));
                 }
             }
-
             session.transfer(flowFileHolder[0], REL_SUCCESS);
         } catch (Exception ex) {
             logger.error("Failed to process flow file", ex);
@@ -178,6 +158,34 @@ public class PutSmsProcessor extends AbstractProcessor {
             session.transfer(flowFileHolder[0], REL_FAILURE);
         } finally {
             snsClient.close();
+        }
+    }
+
+    /**
+     * This method send an sms to the phoneNumber.
+     * @param snsClient the initialized SnsClient instance.
+     * @param phoneNumber the phone number.
+     * @param messageBody the message to send to the phoneNumber.
+     * @return a {@code HashMap<String, String>} that contains the response status and the reponse message.
+     */
+    private HashMap<String, String> doSendSms(SnsClient snsClient, String phoneNumber, String messageBody) {
+        HashMap<String, String> result = new HashMap<>();
+        StringBuilder sb = new StringBuilder();
+        try {
+            PublishRequest request = PublishRequest.builder().message(messageBody).phoneNumber(phoneNumber).build();
+            PublishResponse response = snsClient.publish(request);
+            String message = sb.append("SMS send to ").append(phoneNumber).append(": ").append(response.messageId()).toString();
+            logger.info(message);
+            result.put(SMS_RESPONSE_STATUS, STATUS_SUCCESS);
+            result.put(SMS_RESPONSE_MESSAGE, message);
+            return result;
+        } catch (Exception e) {
+            String message = sb.append("Failed to send SMS to ").append(phoneNumber).append(": ").append(e.getMessage())
+                    .toString();
+            logger.info(message);
+            result.put(SMS_RESPONSE_STATUS, STATUS_FAILED);
+            result.put(SMS_RESPONSE_MESSAGE, message);
+            return result;
         }
     }
 }
