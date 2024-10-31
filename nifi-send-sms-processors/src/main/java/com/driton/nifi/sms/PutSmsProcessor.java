@@ -161,10 +161,10 @@ public class PutSmsProcessor extends AbstractProcessor {
     }
 
     /**
-     * This method send an sms to the phoneNumber.
+     * This method sends a SMS message to a phoneNumber.
      * @param snsClient the initialized SnsClient instance.
      * @param phoneNumber the phone number.
-     * @param messageBody the message to send to the phoneNumber.
+     * @param messageBody the message to send.
      * @return a {@code HashMap<String, String>} that contains the response status and the reponse message.
      */
     private HashMap<String, String> doSendSms(SnsClient snsClient, String phoneNumber, String messageBody) {
