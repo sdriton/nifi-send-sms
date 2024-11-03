@@ -29,18 +29,23 @@ import org.apache.nifi.util.TestRunners;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import io.github.cdimascio.dotenv.Dotenv;
+
 class PutSmsProcessorTest {
 
     private TestRunner testRunner;
+    private String flowFileContent = "{\"to\": [\"+15148669999\",\"+15148887779\"], \"body\": \"SMS Message.\"}";
 
     @BeforeEach
     public void init() {
-        testRunner = TestRunners.newTestRunner(PutSmsProcessor.class);
+        final PutSmsProcessor putSMS = new PutSmsProcessor();
+        putSMS.init(null);
+        testRunner = TestRunners.newTestRunner(putSMS);
     }
 
-    // @Test
+    @Test
     void testGetRelationships() {
-        final PutSmsProcessor putSMS = new PutSmsProcessor();
+        PutSmsProcessor putSMS = (PutSmsProcessor) testRunner.getProcessor();
         final Set<Relationship> relationships = putSMS.getRelationships();
         assertEquals(2, relationships.size());
         assertTrue(relationships.contains(PutSmsProcessor.REL_FAILURE));
@@ -52,7 +57,7 @@ class PutSmsProcessorTest {
         testRunner.setProperty(PutSmsProcessor.AWS_ACCESS_KEY, "awsAccessKey");
         testRunner.setProperty(PutSmsProcessor.AWS_SECRET_KEY, "awsAccessSecret");
         testRunner.setProperty(PutSmsProcessor.AWS_REGION, "us-east-1");
-        String flowFileContent = "{\"to\": \"[\"+15148887777\",\"+15148887779\"]\", \"body\": \"SMS Message.\"}";
+
         // Enqueue a flow file
         testRunner.enqueue(flowFileContent);
 
@@ -64,6 +69,34 @@ class PutSmsProcessorTest {
 
         // get the flowfiles from Failure Q
         List<MockFlowFile> results = testRunner.getFlowFilesForRelationship(PutSmsProcessor.REL_FAILURE);
+        assertEquals(1, results.size());
+
+        MockFlowFile outputFlowfile = results.get(0);
+        String outputFlowfileContent = new String(testRunner.getContentAsByteArray(outputFlowfile));
+        System.out.println("Output flowfile content: " + outputFlowfileContent);
+        assertEquals(flowFileContent, outputFlowfileContent);
+    }
+
+    // @Test
+    void testWithCorrectAWSInformation() {
+        Dotenv dotEnv = Dotenv.load();
+        String awsAccessKey = dotEnv.get("AWS_ACCESS_KEY");
+        String awsAccessSecret = dotEnv.get("AWS_ACCESS_SECRET");
+
+        testRunner.setProperty(PutSmsProcessor.AWS_ACCESS_KEY, awsAccessKey);
+        testRunner.setProperty(PutSmsProcessor.AWS_SECRET_KEY, awsAccessSecret);
+        testRunner.setProperty(PutSmsProcessor.AWS_REGION, "us-east-1");
+        // Enqueue a flow file
+        testRunner.enqueue(flowFileContent);
+
+        // execute 1 run - similar to NIFI UI's run once
+        testRunner.run(1);
+
+        // assert the input Q is empty and the flowfile is processed
+        testRunner.assertQueueEmpty();
+
+        // get the flowfiles from Success Q
+        List<MockFlowFile> results = testRunner.getFlowFilesForRelationship(PutSmsProcessor.REL_SUCCESS);
         assertEquals(1, results.size());
 
         MockFlowFile outputFlowfile = results.get(0);

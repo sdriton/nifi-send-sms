@@ -16,8 +16,8 @@
 package com.driton.nifi.sms;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -75,17 +75,12 @@ public class PutSmsProcessor extends AbstractProcessor {
     public static final Relationship REL_FAILURE = new Relationship.Builder().name("failure")
             .description("FlowFiles that fail to send an SMS are routed to this relationship").build();
 
-    private static final String STATUS_SUCCESS = "Success";
-    private static final String STATUS_FAILED = "Failed";
-    private static final String SMS_RESPONSE_STATUS = "SmsResponseStatus";
-    private static final String SMS_RESPONSE_MESSAGE = "SmsResponseMessage";
-
     private List<PropertyDescriptor> descriptors;
     private Set<Relationship> relationships;
 
     @Override
     protected void init(final ProcessorInitializationContext context) {
-        final List<PropertyDescriptor> descLst =  List.of(AWS_ACCESS_KEY, AWS_SECRET_KEY, AWS_REGION);
+        final List<PropertyDescriptor> descLst = List.of(AWS_ACCESS_KEY, AWS_SECRET_KEY, AWS_REGION);
         this.descriptors = Collections.unmodifiableList(descLst);
 
         final Set<Relationship> relLst = Set.of(REL_SUCCESS, REL_FAILURE);
@@ -109,13 +104,12 @@ public class PutSmsProcessor extends AbstractProcessor {
         if (flowFile == null) {
             return;
         }
-            
+
         final String accessKey = context.getProperty(AWS_ACCESS_KEY).getValue();
         final String secretKey = context.getProperty(AWS_SECRET_KEY).getValue();
         final String region = context.getProperty(AWS_REGION).getValue();
 
-        SnsClient snsClient = SnsClient.builder()
-                .region(Region.of(region))
+        SnsClient snsClient = SnsClient.builder().region(Region.of(region))
                 .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey)))
                 .build();
 
@@ -128,27 +122,20 @@ public class PutSmsProcessor extends AbstractProcessor {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(inputStream);
 
-            // Extract phone numbers (as a list of strings) from the "to" field
-            String toField = jsonNode.get("to").asText();
-            @SuppressWarnings("unchecked")
-            List<String> phoneNumbers = objectMapper.readValue(toField, List.class);
+            // Extract the recepients (phone numbers)
+            List<String> phoneNumbers = getPhoneNumberList(jsonNode);
 
             // Extract the message body from the "body" field
             String messageBody = jsonNode.get("body").asText();
 
             // Send SMS to each phone number
-            // If send sms for a number fails just put an attribute to the flowfile and 
+            // If send sms for a number fails just put an attribute to the flowfile and
             // continue processing the rest of the phone numbers.
             // The flow will fail if an exception is thrown.
+            String message = null;
             for (String phoneNumber : phoneNumbers) {
-                HashMap<String, String> response = doSendSms(snsClient, phoneNumber, messageBody);
-                
-                String responseStatus = response.get(SMS_RESPONSE_STATUS);
-                if(STATUS_FAILED.equals(responseStatus)) {
-                    flowFileHolder[0] = session.putAttribute(flowFileHolder[0], "aws.sms.error."+phoneNumber, response.get(SMS_RESPONSE_MESSAGE));
-                } else if(STATUS_SUCCESS.equals(responseStatus)){
-                    flowFileHolder[0] = session.putAttribute(flowFileHolder[0], "aws.sms.status."+phoneNumber, response.get(SMS_RESPONSE_MESSAGE));
-                }
+                message = doSendSms(snsClient, phoneNumber, messageBody);
+                flowFileHolder[0] = session.putAttribute(flowFileHolder[0], "aws.sms.status." + phoneNumber, message);
             }
             session.transfer(flowFileHolder[0], REL_SUCCESS);
         } catch (Exception ex) {
@@ -161,30 +148,44 @@ public class PutSmsProcessor extends AbstractProcessor {
     }
 
     /**
+     * This method extracts the phone numbers from the "to" JsonNode.
+     * 
+     * @param jsonNode the JsonNode containing the phone number array.
+     * @return a {@code List<String>} that contains the phone number.
+     */
+    private List<String> getPhoneNumberList(JsonNode jsonNode) {
+        // Extract phone numbers (as a list of strings) from the "to" field
+        JsonNode to = jsonNode.get("to");
+        List<String> phoneNumbers = new ArrayList<String>();
+        if (to.isArray()) {
+            for (final JsonNode objNode : to) {
+                System.out.println(objNode);
+                phoneNumbers.add(objNode.asText());
+            }
+        } else {
+            phoneNumbers.add(to.asText());
+        }
+        return phoneNumbers;
+    }
+
+    /**
      * This method sends a SMS message to a phoneNumber.
-     * @param snsClient the initialized SnsClient instance.
+     * 
+     * @param snsClient   the initialized SnsClient instance.
      * @param phoneNumber the phone number.
      * @param messageBody the message to send.
-     * @return a {@code HashMap<String, String>} that contains the response status and the reponse message.
+     * @return a {@code HashMap<String, String>} that contains the response status
+     *         and the reponse message.
+     * @throws Exception this method catches all the exeptions thrown by the
+     *                   SNSClient.publish() method.
      */
-    private HashMap<String, String> doSendSms(SnsClient snsClient, String phoneNumber, String messageBody) {
-        HashMap<String, String> result = new HashMap<>();
+    private String doSendSms(SnsClient snsClient, String phoneNumber, String messageBody) throws Exception {
         StringBuilder sb = new StringBuilder();
-        try {
-            PublishRequest request = PublishRequest.builder().message(messageBody).phoneNumber(phoneNumber).build();
-            PublishResponse response = snsClient.publish(request);
-            String message = sb.append("SMS send to ").append(phoneNumber).append(": ").append(response.messageId()).toString();
-            logger.info(message);
-            result.put(SMS_RESPONSE_STATUS, STATUS_SUCCESS);
-            result.put(SMS_RESPONSE_MESSAGE, message);
-            return result;
-        } catch (Exception e) {
-            String message = sb.append("Failed to send SMS to ").append(phoneNumber).append(": ").append(e.getMessage())
-                    .toString();
-            logger.info(message);
-            result.put(SMS_RESPONSE_STATUS, STATUS_FAILED);
-            result.put(SMS_RESPONSE_MESSAGE, message);
-            return result;
-        }
+        PublishRequest request = PublishRequest.builder().message(messageBody).phoneNumber(phoneNumber).build();
+        PublishResponse response = snsClient.publish(request);
+        String message = sb.append("SMS send to ").append(phoneNumber).append(": ").append(response.messageId())
+                .toString();
+        logger.info(message);
+        return message;
     }
 }
