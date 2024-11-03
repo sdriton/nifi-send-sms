@@ -13,13 +13,16 @@
     See the License for the specific language governing permissions and
     limitations under the License. 
 */
-   
+
 package com.driton.nifi.sms;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
+import java.util.Set;
 
+import org.apache.nifi.processor.Relationship;
 import org.apache.nifi.util.MockFlowFile;
 import org.apache.nifi.util.TestRunner;
 import org.apache.nifi.util.TestRunners;
@@ -35,22 +38,31 @@ class PutSmsProcessorTest {
         testRunner = TestRunners.newTestRunner(PutSmsProcessor.class);
     }
 
+    // @Test
+    void testGetRelationships() {
+        final PutSmsProcessor putSMS = new PutSmsProcessor();
+        final Set<Relationship> relationships = putSMS.getRelationships();
+        assertEquals(2, relationships.size());
+        assertTrue(relationships.contains(PutSmsProcessor.REL_FAILURE));
+        assertTrue(relationships.contains(PutSmsProcessor.REL_SUCCESS));
+    }
+
     @Test
-    void testWrongAWSInformation() {
-        testRunner.setProperty(PutSmsProcessor.AWS_ACCESS_KEY, "AccessKey");
-        testRunner.setProperty(PutSmsProcessor.AWS_SECRET_KEY, "AccessKeySecret");
+    void testWithWrongAWSInformation() {
+        testRunner.setProperty(PutSmsProcessor.AWS_ACCESS_KEY, "awsAccessKey");
+        testRunner.setProperty(PutSmsProcessor.AWS_SECRET_KEY, "awsAccessSecret");
         testRunner.setProperty(PutSmsProcessor.AWS_REGION, "us-east-1");
         String flowFileContent = "{\"to\": \"[\"+15148887777\",\"+15148887779\"]\", \"body\": \"SMS Message.\"}";
         // Enqueue a flow file
         testRunner.enqueue(flowFileContent);
-        
-        //execute 1 run - similar to NIFI UI's run once
+
+        // execute 1 run - similar to NIFI UI's run once
         testRunner.run(1);
 
-         //assert the input Q is empty and the flowfile is processed
+        // assert the input Q is empty and the flowfile is processed
         testRunner.assertQueueEmpty();
 
-         //get the flowfiles from Failure Q
+        // get the flowfiles from Failure Q
         List<MockFlowFile> results = testRunner.getFlowFilesForRelationship(PutSmsProcessor.REL_FAILURE);
         assertEquals(1, results.size());
 

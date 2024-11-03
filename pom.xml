@@ -27,11 +27,51 @@
     <groupId>com.driton.nifi</groupId>
     <artifactId>nifi-send-sms</artifactId>
     <packaging>pom</packaging>
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>A NiFi processor that allows sending direct SMS messages using AWS SNS Service without having to manage topics.</description>
+    <url>https://github.com/sdriton/nifi-send-sms</url>
+
 
     <modules>
         <module>nifi-send-sms-processors</module>
         <module>nifi-send-sms-nar</module>
     </modules>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <scm>
+        <url>https://github.com/sdriton/nifi-send-sms</url>
+        <connection>scm:git:git://github.com/sdriton/nifi-send-sms.git</connection>
+        <developerConnection>scm:git:ssh://github.com/sdriton/nifi-send-sms.git</developerConnection>
+    </scm>
+    <developers>
+        <developer>
+            <name>Driton Salihu</name>
+            <email>driton.geci@gmail.com</email>
+            <organization>Driton Salihu</organization>
+            <organizationUrl>https://github.com/sdriton</organizationUrl>
+        </developer>
+    </developers>
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+
+    <properties>
+        <send-sms-version>2.0.0-M4</send-sms-version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 
     <dependencies>
         <!-- NiFi API -->
@@ -41,11 +81,11 @@
             <scope>provided</scope>
         </dependency>
 
-
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
+
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>core</artifactId>
@@ -79,4 +119,67 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
     </dependencies>
+
+    <!-- Build Plugins -->
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.nifi</groupId>
+                    <artifactId>nifi-nar-maven-plugin</artifactId>
+                    <version>2.1.0</version>
+                    <extensions>true</extensions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>3.2.7</version>
+                    <executions>
+                        <execution>
+                            <id>sign-artifacts</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>sign</goal>
+                            </goals>
+                            <configuration>
+                                <keyname>${env.gpg_keyname}</keyname>
+                                <passphraseServerId>${env.gpg_keyname}</passphraseServerId>
+                                <gpgArguments>
+                                    <arg>--pinentry-mode</arg>
+                                    <arg>loopback</arg>
+                                </gpgArguments>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <!-- Plugin to help release to OSSRH -->
+                <plugin>
+                    <groupId>org.sonatype.plugins</groupId>
+                    <artifactId>nexus-staging-maven-plugin</artifactId>
+                    <version>1.7.0</version>
+                    <extensions>true</extensions>
+                    <executions>
+                        <execution>
+                            <id>injected-nexus-deploy</id>
+                            <phase>deploy</phase>
+                            <goals>
+                                <goal>deploy</goal>
+                            </goals>
+                            <configuration>
+                                <stagingProgressTimeoutMinutes>15</stagingProgressTimeoutMinutes>
+                                <serverId>ossrh</serverId>
+                                <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
+                                <autoReleaseAfterClose>false</autoReleaseAfterClose>
+                            </configuration>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <serverId>ossrh</serverId>
+                        <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
+                        <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 </project>
