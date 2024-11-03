@@ -8,7 +8,7 @@ Below is provided a sample Flowfile content that is required by the PutSms proce
 
 ```
 { 
-    "to": "["+15148887777","+15148887779"]",
+    "to": ["+15148887777","+15148887779"],
     "body": "SMS Message."
 }
 ```
