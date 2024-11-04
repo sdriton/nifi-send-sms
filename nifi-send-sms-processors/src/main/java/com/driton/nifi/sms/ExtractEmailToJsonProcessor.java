@@ -86,6 +86,7 @@ public class ExtractEmailToJsonProcessor extends AbstractProcessor {
 
     @Override
     public void onTrigger(final ProcessContext context, final ProcessSession session) throws ProcessException {
+       
         FlowFile flowFile = session.get();
         if (flowFile == null) {
             return;
@@ -114,8 +115,9 @@ public class ExtractEmailToJsonProcessor extends AbstractProcessor {
             FlowFile updatedFlowFile = session.write(flowFile,
                     (OutputStreamCallback) outputStream -> objectMapper.writeValue(outputStream, jsonMap));
             session.transfer(updatedFlowFile, REL_SUCCESS);
-            
+
         } catch (Exception e) {
+
             logger.error("Error processing FlowFile: ", e.getMessage());
             FlowFile emptyFlowFile = session.write(flowFile,
                     (OutputStreamCallback) outputStream -> objectMapper.writeValue(outputStream, ""));
@@ -137,7 +139,7 @@ public class ExtractEmailToJsonProcessor extends AbstractProcessor {
 
         if (toAddresses != null) {
             for (Address address : toAddresses) {
-                recipients.add(((InternetAddress) address).getAddress().toString().split("@")[0]);
+                recipients.add(((InternetAddress) address).getAddress().split("@")[0]);
             }
         }
         return recipients;

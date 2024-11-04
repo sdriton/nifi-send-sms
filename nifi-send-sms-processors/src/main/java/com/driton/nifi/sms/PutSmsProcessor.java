@@ -156,10 +156,10 @@ public class PutSmsProcessor extends AbstractProcessor {
     private List<String> getPhoneNumberList(JsonNode jsonNode) {
         // Extract phone numbers (as a list of strings) from the "to" field
         JsonNode to = jsonNode.get("to");
-        List<String> phoneNumbers = new ArrayList<String>();
+        List<String> phoneNumbers = new ArrayList<>();
         if (to.isArray()) {
             for (final JsonNode objNode : to) {
-                System.out.println(objNode);
+                logger.info("\nPhoneNumber: ", objNode);
                 phoneNumbers.add(objNode.asText());
             }
         } else {
