@@ -21,9 +21,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.nifi.annotation.behavior.InputRequirement;
+import org.apache.nifi.annotation.behavior.InputRequirement.Requirement;
 import org.apache.nifi.annotation.behavior.WritesAttribute;
 import org.apache.nifi.annotation.behavior.WritesAttributes;
 import org.apache.nifi.annotation.documentation.CapabilityDescription;
+import org.apache.nifi.annotation.documentation.SeeAlso;
 import org.apache.nifi.annotation.documentation.Tags;
 import org.apache.nifi.components.PropertyDescriptor;
 import org.apache.nifi.flowfile.FlowFile;
@@ -46,6 +49,8 @@ import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sns.model.PublishRequest;
 import software.amazon.awssdk.services.sns.model.PublishResponse;
 
+@SeeAlso({ ExtractEmailToJsonProcessor.class })
+@InputRequirement(Requirement.INPUT_REQUIRED)
 @Tags({ "aws", "sns", "sms", "notification", "amazon" })
 @CapabilityDescription("This Processor sends SMS messages to each phone number provided in the incoming Flowfile. "
         + "It uses the Amazon AWS SNS Service SDK. The incoming Flowfile has to be in a json format. "
@@ -138,6 +143,7 @@ public class PutSmsProcessor extends AbstractProcessor {
                 flowFileHolder[0] = session.putAttribute(flowFileHolder[0], "aws.sms.status." + phoneNumber, message);
             }
             session.transfer(flowFileHolder[0], REL_SUCCESS);
+
         } catch (Exception ex) {
             logger.error("Failed to process flow file", ex);
             flowFileHolder[0] = session.putAttribute(flowFileHolder[0], "aws.sms.error", ex.getMessage());
@@ -180,11 +186,9 @@ public class PutSmsProcessor extends AbstractProcessor {
      *                   SNSClient.publish() method.
      */
     private String doSendSms(SnsClient snsClient, String phoneNumber, String messageBody) throws Exception {
-        StringBuilder sb = new StringBuilder();
         PublishRequest request = PublishRequest.builder().message(messageBody).phoneNumber(phoneNumber).build();
         PublishResponse response = snsClient.publish(request);
-        String message = sb.append("SMS send to ").append(phoneNumber).append(": ").append(response.messageId())
-                .toString();
+        String message = String.format("SMS sent to %s: %s.", phoneNumber, response.messageId());
         logger.info(message);
         return message;
     }

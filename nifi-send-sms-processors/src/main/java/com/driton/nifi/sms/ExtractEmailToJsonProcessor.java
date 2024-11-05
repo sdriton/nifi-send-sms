@@ -27,10 +27,13 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import org.apache.nifi.annotation.behavior.InputRequirement;
+import org.apache.nifi.annotation.behavior.InputRequirement.Requirement;
 import org.apache.nifi.annotation.behavior.WritesAttribute;
 import org.apache.nifi.annotation.behavior.WritesAttributes;
 import org.apache.nifi.annotation.documentation.CapabilityDescription;
 import org.apache.nifi.annotation.documentation.Tags;
+import org.apache.nifi.annotation.documentation.SeeAlso;
 import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.logging.ComponentLog;
 import org.apache.nifi.processor.AbstractProcessor;
@@ -38,6 +41,7 @@ import org.apache.nifi.processor.ProcessContext;
 import org.apache.nifi.processor.ProcessSession;
 import org.apache.nifi.processor.ProcessorInitializationContext;
 import org.apache.nifi.processor.Relationship;
+import org.apache.nifi.processor.exception.FlowFileAccessException;
 import org.apache.nifi.processor.exception.ProcessException;
 import org.apache.nifi.processor.io.InputStreamCallback;
 import org.apache.nifi.processor.io.OutputStreamCallback;
@@ -53,6 +57,8 @@ import jakarta.mail.Session;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 
+@SeeAlso({PutSmsProcessor.class})
+@InputRequirement(Requirement.INPUT_REQUIRED)
 @Tags({ "email", "extract", "convert", "json" })
 @CapabilityDescription("This Processor extracts email message body and recepients (to) fields and creates a json structure as a FlowFile. "
         + "Below is provided a sample Flowfile content :"
@@ -86,16 +92,21 @@ public class ExtractEmailToJsonProcessor extends AbstractProcessor {
 
     @Override
     public void onTrigger(final ProcessContext context, final ProcessSession session) throws ProcessException {
-       
+
         FlowFile flowFile = session.get();
         if (flowFile == null) {
             return;
         }
 
         final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        session.read(flowFile, (InputStreamCallback) inputStream -> {
-            byteArrayOutputStream.write(inputStream.readAllBytes());
-        });
+        try {
+            session.read(flowFile, (InputStreamCallback) inputStream -> {
+                byteArrayOutputStream.write(inputStream.readAllBytes());
+            });
+        } catch (FlowFileAccessException ffae) {
+            throw new ProcessException("Failed to read FlowFile content.", ffae);
+        }
+
         byte[] emailContent = byteArrayOutputStream.toByteArray();
 
         try {
