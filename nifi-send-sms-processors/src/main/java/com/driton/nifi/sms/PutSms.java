@@ -29,6 +29,7 @@ import org.apache.nifi.annotation.documentation.CapabilityDescription;
 import org.apache.nifi.annotation.documentation.SeeAlso;
 import org.apache.nifi.annotation.documentation.Tags;
 import org.apache.nifi.components.PropertyDescriptor;
+import org.apache.nifi.expression.ExpressionLanguageScope;
 import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.logging.ComponentLog;
 import org.apache.nifi.processor.AbstractProcessor;
@@ -49,7 +50,7 @@ import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sns.model.PublishRequest;
 import software.amazon.awssdk.services.sns.model.PublishResponse;
 
-@SeeAlso({ ExtractEmailToJsonProcessor.class })
+@SeeAlso({ ExtractEmailToJson.class })
 @InputRequirement(Requirement.INPUT_REQUIRED)
 @Tags({ "aws", "sns", "sms", "notification", "amazon" })
 @CapabilityDescription("This Processor sends SMS messages to each phone number provided in the incoming Flowfile. "
@@ -60,7 +61,7 @@ import software.amazon.awssdk.services.sns.model.PublishResponse;
 @WritesAttributes({
         @WritesAttribute(attribute = "aws.sms.status", description = "Status of the SMS message sent through AWS SNS"),
         @WritesAttribute(attribute = "aws.sms.error", description = "Error details if the SMS failed to send") })
-public class PutSmsProcessor extends AbstractProcessor {
+public class PutSms extends AbstractProcessor {
     private ComponentLog logger = null;
     public static final PropertyDescriptor AWS_ACCESS_KEY = new PropertyDescriptor.Builder().name("AWS Access Key")
             .description("AWS Access Key for SNS").required(true).addValidator(StandardValidators.NON_BLANK_VALIDATOR)
@@ -68,6 +69,7 @@ public class PutSmsProcessor extends AbstractProcessor {
 
     public static final PropertyDescriptor AWS_SECRET_KEY = new PropertyDescriptor.Builder().name("AWS Secret Key")
             .description("AWS Secret Key for SNS").required(true).addValidator(StandardValidators.NON_BLANK_VALIDATOR)
+            .expressionLanguageSupported(ExpressionLanguageScope.ENVIRONMENT)
             .sensitive(true).build();
 
     public static final PropertyDescriptor AWS_REGION = new PropertyDescriptor.Builder().name("AWS Region")
@@ -182,8 +184,8 @@ public class PutSmsProcessor extends AbstractProcessor {
      * @param messageBody the message to send.
      * @return a {@code HashMap<String, String>} that contains the response status
      *         and the reponse message.
-     * @throws Exception this method catches all the exeptions thrown by the
-     *                   SNSClient.publish() method.
+     * @throws Exception this method throws an Exception because of the many
+     *                   exceptions thrown by the SNSClient.publish() method.
      */
     private String doSendSms(SnsClient snsClient, String phoneNumber, String messageBody) throws Exception {
         PublishRequest request = PublishRequest.builder().message(messageBody).phoneNumber(phoneNumber).build();

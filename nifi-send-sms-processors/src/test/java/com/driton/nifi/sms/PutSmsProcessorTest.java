@@ -38,25 +38,25 @@ class PutSmsProcessorTest {
 
     @BeforeEach
     public void init() {
-        final PutSmsProcessor putSMS = new PutSmsProcessor();
+        final PutSms putSMS = new PutSms();
         putSMS.init(null);
         testRunner = TestRunners.newTestRunner(putSMS);
     }
 
     @Test
     void testGetRelationships() {
-        PutSmsProcessor putSMS = (PutSmsProcessor) testRunner.getProcessor();
+        PutSms putSMS = (PutSms) testRunner.getProcessor();
         final Set<Relationship> relationships = putSMS.getRelationships();
         assertEquals(2, relationships.size());
-        assertTrue(relationships.contains(PutSmsProcessor.REL_FAILURE));
-        assertTrue(relationships.contains(PutSmsProcessor.REL_SUCCESS));
+        assertTrue(relationships.contains(PutSms.REL_FAILURE));
+        assertTrue(relationships.contains(PutSms.REL_SUCCESS));
     }
 
     @Test
     void testWithWrongAWSInformation() {
-        testRunner.setProperty(PutSmsProcessor.AWS_ACCESS_KEY, "awsAccessKey");
-        testRunner.setProperty(PutSmsProcessor.AWS_SECRET_KEY, "awsAccessSecret");
-        testRunner.setProperty(PutSmsProcessor.AWS_REGION, "us-east-1");
+        testRunner.setProperty(PutSms.AWS_ACCESS_KEY, "awsAccessKey");
+        testRunner.setProperty(PutSms.AWS_SECRET_KEY, "awsAccessSecret");
+        testRunner.setProperty(PutSms.AWS_REGION, "us-east-1");
 
         // Enqueue a flow file
         testRunner.enqueue(flowFileContent);
@@ -68,7 +68,7 @@ class PutSmsProcessorTest {
         testRunner.assertQueueEmpty();
 
         // get the flowfiles from Failure Q
-        List<MockFlowFile> results = testRunner.getFlowFilesForRelationship(PutSmsProcessor.REL_FAILURE);
+        List<MockFlowFile> results = testRunner.getFlowFilesForRelationship(PutSms.REL_FAILURE);
         assertEquals(1, results.size());
 
         MockFlowFile outputFlowfile = results.get(0);
@@ -83,9 +83,9 @@ class PutSmsProcessorTest {
         String awsAccessKey = dotEnv.get("AWS_ACCESS_KEY");
         String awsAccessSecret = dotEnv.get("AWS_ACCESS_SECRET");
 
-        testRunner.setProperty(PutSmsProcessor.AWS_ACCESS_KEY, awsAccessKey);
-        testRunner.setProperty(PutSmsProcessor.AWS_SECRET_KEY, awsAccessSecret);
-        testRunner.setProperty(PutSmsProcessor.AWS_REGION, "us-east-1");
+        testRunner.setProperty(PutSms.AWS_ACCESS_KEY, awsAccessKey);
+        testRunner.setProperty(PutSms.AWS_SECRET_KEY, awsAccessSecret);
+        testRunner.setProperty(PutSms.AWS_REGION, "us-east-1");
         // Enqueue a flow file
         testRunner.enqueue(flowFileContent);
 
@@ -96,7 +96,7 @@ class PutSmsProcessorTest {
         testRunner.assertQueueEmpty();
 
         // get the flowfiles from Success Q
-        List<MockFlowFile> results = testRunner.getFlowFilesForRelationship(PutSmsProcessor.REL_SUCCESS);
+        List<MockFlowFile> results = testRunner.getFlowFilesForRelationship(PutSms.REL_SUCCESS);
         assertEquals(1, results.size());
 
         MockFlowFile outputFlowfile = results.get(0);

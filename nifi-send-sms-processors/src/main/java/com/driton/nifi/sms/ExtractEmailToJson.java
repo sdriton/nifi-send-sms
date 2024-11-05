@@ -57,7 +57,7 @@ import jakarta.mail.Session;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 
-@SeeAlso({PutSmsProcessor.class})
+@SeeAlso({PutSms.class})
 @InputRequirement(Requirement.INPUT_REQUIRED)
 @Tags({ "email", "extract", "convert", "json" })
 @CapabilityDescription("This Processor extracts email message body and recepients (to) fields and creates a json structure as a FlowFile. "
@@ -66,7 +66,7 @@ import jakarta.mail.internet.MimeMessage;
 @WritesAttributes({
         @WritesAttribute(attribute = "email.conversion.status", description = "Status of the email conversion."),
         @WritesAttribute(attribute = "email.conversion.error", description = "Error details if the email fails to convert.") })
-public class ExtractEmailToJsonProcessor extends AbstractProcessor {
+public class ExtractEmailToJson extends AbstractProcessor {
     private ComponentLog logger = null;
 
     public static final Relationship REL_SUCCESS = new Relationship.Builder().name("success")
