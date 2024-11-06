@@ -128,7 +128,6 @@ public class ExtractEmailToJson extends AbstractProcessor {
             session.transfer(updatedFlowFile, REL_SUCCESS);
 
         } catch (Exception e) {
-
             logger.error("Error processing FlowFile: ", e.getMessage());
             FlowFile emptyFlowFile = session.write(flowFile,
                     (OutputStreamCallback) outputStream -> objectMapper.writeValue(outputStream, ""));

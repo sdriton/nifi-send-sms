@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 
 import io.github.cdimascio.dotenv.Dotenv;
 
-class PutSmsProcessorTest {
+class PutSmsTest {
 
     private TestRunner testRunner;
     private String flowFileContent = "{\"to\": [\"+15148669999\",\"+15148887779\"], \"body\": \"SMS Message.\"}";

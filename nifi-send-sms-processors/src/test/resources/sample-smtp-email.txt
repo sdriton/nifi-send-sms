@@ -1,0 +1,15 @@
+Received: from localhost (localhost [127.0.0.1])
+        by localhost
+        with SMTP (Apache NiFi SMTP) id M33P1KUJ;
+        Mon, 04 Nov 2024 19:10:19 -0500 (EST)
+Date: Mon, 4 Nov 2024 19:10:19 -0500 (EST)
+From: dg@gmail.com
+To: +11004445555@hotmail.com, +11009998888@ethereal.email
+Message-ID: <1330766524.1.1730765419710@localhost>
+Subject: Message from NiFi
+MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: NiFi
+
+Hi, This is my email.
