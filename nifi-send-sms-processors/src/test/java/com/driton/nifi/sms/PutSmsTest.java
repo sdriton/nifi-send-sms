@@ -34,7 +34,7 @@ import io.github.cdimascio.dotenv.Dotenv;
 class PutSmsTest {
 
     private TestRunner testRunner;
-    private String flowFileContent = "{\"to\": [\"+15148669999\",\"+15148887779\"], \"body\": \"SMS Message.\"}";
+    private String flowFileContent = "{\"to\": [\"+11118669999\",\"+11118887779\"], \"body\": \"SMS Message.\"}";
 
     @BeforeEach
     public void init() {
@@ -77,11 +77,17 @@ class PutSmsTest {
         assertEquals(flowFileContent, outputFlowfileContent);
     }
 
-    // @Test
+    @Test
     void testWithCorrectAWSInformation() {
         Dotenv dotEnv = Dotenv.load();
         String awsAccessKey = dotEnv.get("AWS_ACCESS_KEY");
         String awsAccessSecret = dotEnv.get("AWS_ACCESS_SECRET");
+        
+        if(awsAccessKey == null || awsAccessSecret == null){
+            // If AWS credentials are not set in the environment variables
+            // skip the test because it's going to fail.
+            return;
+        }
 
         testRunner.setProperty(PutSms.AWS_ACCESS_KEY, awsAccessKey);
         testRunner.setProperty(PutSms.AWS_SECRET_KEY, awsAccessSecret);
