@@ -81,6 +81,8 @@ class ExtractEmailToJsonTest {
         try {
             node = mapper.readTree(mockFlowFile.getContent());
         } catch (Exception e) {
+            // helps with debugging
+            e.printStackTrace();
         }
         JsonNode actualTo = node.get("to");
         String firstPhoneNumber = null;
@@ -88,7 +90,8 @@ class ExtractEmailToJsonTest {
             List<String> toList = mapper.readerForListOf(String.class).readValue(actualTo);
             firstPhoneNumber = toList.get(0);
         } catch(Exception e){
-
+            // help debugging
+            e.printStackTrace();
         }
         Assertions.assertEquals("+11004445555", firstPhoneNumber);
     }
@@ -111,5 +114,11 @@ class ExtractEmailToJsonTest {
         String actualJson = mockFlowFile.getContent();
         String expectedJson = "{\"to\":[\"+11239994444\"],\"body\":\"This is my text to send as SMS\"}";
         Assertions.assertEquals(expectedJson, actualJson);
+    }
+
+    @Test
+    void testGetProcessor(){
+        ExtractEmailToJson processor = (ExtractEmailToJson) runner.getProcessor();
+        Assertions.assertNotNull(processor);
     }
 }

@@ -53,28 +53,33 @@ public class GenerateEmail {
     }
 
     public byte[] emailMessage(final String to) {
-        Properties prop = new Properties();
-        Session session = Session.getDefaultInstance(prop);
-        MimeMessage message = new MimeMessage(session);
-        try {
-            message.setFrom(new InternetAddress(this.from));
-            message.addRecipient(Message.RecipientType.TO, new InternetAddress(this.to));
-            message.setSubject(this.subject);
-            message.setText(this.message);
-            message.setHeader("hostname", this.hostName);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        MimeMessage msg = this.emailMessageAsMimeMessage(to);
 
         final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         byte[] result = null;
         try {
-            message.writeTo(byteArrayOutputStream);
+            msg.writeTo(byteArrayOutputStream);
             result = byteArrayOutputStream.toByteArray();
         } catch (Exception e) {
             e.printStackTrace();
         }
         return result;
+    }
+
+    public MimeMessage emailMessageAsMimeMessage(final String to){
+        Properties prop = new Properties();
+        Session session = Session.getDefaultInstance(prop);
+        MimeMessage msg = new MimeMessage(session);
+        try {
+            msg.setFrom(new InternetAddress(this.from));
+            msg.addRecipient(Message.RecipientType.TO, new InternetAddress(this.to));
+            msg.setSubject(this.subject);
+            msg.setText(this.message);
+            msg.setHeader("hostname", this.hostName);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return msg;
     }
 
     public byte[] fromFile(String fileName) {
