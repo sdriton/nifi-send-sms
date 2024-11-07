@@ -83,11 +83,7 @@ class PutSmsTest {
         try { 
             dotEnv = Dotenv.load();
         } catch(Exception e){
-            e.printStackTrace();
-        }
-
-        if(dotEnv == null){
-            System.out.println("DotEnv file is missing.");            
+            System.out.println("DotEnv file is missing."); 
             return;
         }
 
