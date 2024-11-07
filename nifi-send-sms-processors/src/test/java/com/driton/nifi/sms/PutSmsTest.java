@@ -86,6 +86,7 @@ class PutSmsTest {
         if(awsAccessKey == null || awsAccessSecret == null){
             // If AWS credentials are not set in the environment variables
             // skip the test because it's going to fail.
+            System.out.println("AWS Credentials must be set in the environment variables.");
             return;
         }
 
