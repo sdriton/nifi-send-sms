@@ -2,7 +2,10 @@
     "java.compile.nullAnalysis.mode": "automatic",
     "java.configuration.updateBuildConfiguration": "automatic",
     "java.configuration.runtimes": [
-        {}
+        {
+            "name": "JavaSE-21",
+            "path": "~/OpenJDK/jdk-21.0.1.jdk/Contents/Home/"
+        }
     ],
     "java.format.settings.url": ".vscode/java-formatter.xml",
 }

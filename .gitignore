@@ -1,7 +1,14 @@
 .DS_Store
 
+.settings
+.classpath
+.project
+.vscode
 .git
 .env
+launch.json
+settings.json
+
 # Compiled class file
 *.class
 target/

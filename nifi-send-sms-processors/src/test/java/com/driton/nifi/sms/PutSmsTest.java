@@ -79,7 +79,18 @@ class PutSmsTest {
 
     @Test
     void testWithCorrectAWSInformation() {
-        Dotenv dotEnv = Dotenv.load();
+        Dotenv dotEnv = null; 
+        try { 
+            dotEnv = Dotenv.load();
+        } catch(Exception e){
+            e.printStackTrace();
+        }
+
+        if(dotEnv == null){
+            System.out.println("DotEnv file is missing.");            
+            return;
+        }
+
         String awsAccessKey = dotEnv.get("AWS_ACCESS_KEY");
         String awsAccessSecret = dotEnv.get("AWS_ACCESS_SECRET");
         
