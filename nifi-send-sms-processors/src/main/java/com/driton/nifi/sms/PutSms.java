@@ -167,7 +167,7 @@ public class PutSms extends AbstractProcessor {
         List<String> phoneNumbers = new ArrayList<>();
         if (to.isArray()) {
             for (final JsonNode objNode : to) {
-                logger.info("\nPhoneNumber: ", objNode);
+                logger.info("\nPhoneNumber: ", objNode.asText());
                 phoneNumbers.add(objNode.asText());
             }
         } else {
