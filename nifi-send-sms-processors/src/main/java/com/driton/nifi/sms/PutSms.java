@@ -147,7 +147,7 @@ public class PutSms extends AbstractProcessor {
             session.transfer(flowFileHolder[0], REL_SUCCESS);
 
         } catch (Exception ex) {
-            logger.error("Failed to process flow file", ex);
+            logger.error("Failed to process flow file: ", ex.getMessage());
             flowFileHolder[0] = session.putAttribute(flowFileHolder[0], "aws.sms.error", ex.getMessage());
             session.transfer(flowFileHolder[0], REL_FAILURE);
         } finally {
@@ -156,7 +156,8 @@ public class PutSms extends AbstractProcessor {
     }
 
     /**
-     * This method extracts the phone numbers from the "to" JsonNode.
+     * This method extracts the phone numbers from the "to" field represented
+     * as a JsonNode.
      * 
      * @param jsonNode the JsonNode containing the phone number array.
      * @return a {@code List<String>} that contains the phone number.
@@ -165,11 +166,12 @@ public class PutSms extends AbstractProcessor {
         // Extract phone numbers (as a list of strings) from the "to" field
         JsonNode to = jsonNode.get("to");
         List<String> phoneNumbers = new ArrayList<>();
+
         if (to.isArray()) {
-            for (final JsonNode objNode : to) {
-                logger.info("\nPhoneNumber: ", objNode.asText());
-                phoneNumbers.add(objNode.asText());
-            }
+            to.forEach(node -> {
+                logger.info("\nPhoneNumber: ", node.asText());
+                phoneNumbers.add(node.asText());        
+            });
         } else {
             phoneNumbers.add(to.asText());
         }

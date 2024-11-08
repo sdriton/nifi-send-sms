@@ -19,6 +19,7 @@ package com.driton.nifi.sms;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -30,6 +31,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import io.github.cdimascio.dotenv.Dotenv;
+import io.github.cdimascio.dotenv.DotenvEntry;
 
 class PutSmsTest {
 
@@ -81,11 +83,18 @@ class PutSmsTest {
     void testWithCorrectAWSInformation() {
         Dotenv dotEnv = null; 
         try { 
-            dotEnv = Dotenv.load();
+            dotEnv = Dotenv.configure().ignoreIfMissing().systemProperties().load();
         } catch(Exception e){
             System.out.println("DotEnv file is missing."); 
             return;
         }
+        Comparator<DotenvEntry> c = new Comparator<DotenvEntry>() {
+            @Override
+            public int compare(DotenvEntry o1, DotenvEntry o2) {
+                return o1.getKey().compareToIgnoreCase(o2.getKey());
+            }
+        };
+        dotEnv.entries().stream().sorted(c).forEachOrdered(it -> System.out.println(it.getKey()));
 
         String awsAccessKey = dotEnv.get("AWS_ACCESS_KEY");
         String awsAccessSecret = dotEnv.get("AWS_ACCESS_SECRET");
