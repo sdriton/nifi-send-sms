@@ -168,10 +168,7 @@ public class PutSms extends AbstractProcessor {
         List<String> phoneNumbers = new ArrayList<>();
 
         if (to.isArray()) {
-            to.forEach(node -> {
-                logger.info("\nPhoneNumber: ", node.asText());
-                phoneNumbers.add(node.asText());        
-            });
+            to.forEach(node -> phoneNumbers.add(node.asText()));
         } else {
             phoneNumbers.add(to.asText());
         }

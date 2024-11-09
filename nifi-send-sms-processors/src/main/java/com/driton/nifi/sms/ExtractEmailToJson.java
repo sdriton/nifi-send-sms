@@ -19,7 +19,7 @@ package com.driton.nifi.sms;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -144,15 +144,8 @@ public class ExtractEmailToJson extends AbstractProcessor {
      *         (+18662224444).
      */
     private List<String> getRecipients(MimeMessage mimeMessage) throws MessagingException {
-        List<String> recipients = new ArrayList<>();
         Address[] toAddresses = mimeMessage.getRecipients(Message.RecipientType.TO);
-
-        if (toAddresses != null) {
-            for (Address address : toAddresses) {
-                recipients.add(((InternetAddress) address).getAddress().split("@")[0]);
-            }
-        }
-        return recipients;
+        return Arrays.asList(toAddresses).stream().map(address -> ((InternetAddress) address).getAddress().split("@")[0]).toList();
     }
 
     /**
