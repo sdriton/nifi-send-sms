@@ -17,6 +17,7 @@
 package com.driton.nifi.sms;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.charset.StandardCharsets;
@@ -27,7 +28,6 @@ import org.apache.nifi.processor.Relationship;
 import org.apache.nifi.util.MockFlowFile;
 import org.apache.nifi.util.TestRunner;
 import org.apache.nifi.util.TestRunners;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -85,15 +85,27 @@ class ExtractEmailToJsonTest {
             e.printStackTrace();
         }
         JsonNode actualTo = node.get("to");
-        String firstPhoneNumber = null;
+        List<String> expectedNrList = List.of("+11004445555", "+11009998888");
+        List<String> actualToList = List.of();
+        String actualBody = "";
         try {
-            List<String> toList = mapper.readerForListOf(String.class).readValue(actualTo);
-            firstPhoneNumber = toList.get(0);
+            actualToList = mapper.readerForListOf(String.class).readValue(actualTo);
+            if(expectedNrList.size() != actualToList.size()){
+                throw new IndexOutOfBoundsException("Actual array size should match the expected array size.");
+            }
+            actualBody = node.get("body").asText();
         } catch(Exception e){
             // help debugging
             e.printStackTrace();
+            return;
         }
-        Assertions.assertEquals("+11004445555", firstPhoneNumber);
+
+        for(int i = 0; i < expectedNrList.size(); ++i){
+            assertEquals(expectedNrList.get(i), actualToList.get(i));
+        }
+
+        String expectedBody = "Hi, This is my email.\r\n";
+        assertEquals(expectedBody, actualBody);
     }
 
     @Test
@@ -113,12 +125,12 @@ class ExtractEmailToJsonTest {
         final MockFlowFile mockFlowFile = mockFlowFiles.get(0);
         String actualJson = mockFlowFile.getContent();
         String expectedJson = "{\"to\":[\"+11239994444\"],\"body\":\"This is my text to send as SMS\"}";
-        Assertions.assertEquals(expectedJson, actualJson);
+        assertEquals(expectedJson, actualJson);
     }
 
     @Test
     void testGetProcessor(){
         ExtractEmailToJson processor = (ExtractEmailToJson) runner.getProcessor();
-        Assertions.assertNotNull(processor);
+        assertNotNull(processor);
     }
 }
