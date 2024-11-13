@@ -1,6 +1,20 @@
-# PutSms
+# Description
+This project contains two processors that allow sending SMS messages:
+* ExtractEmailToJson
+* PutSMS
 
-## Description
+## ExtractEmailToJson Processor
+
+This Processor extracts email message body and recepients (to) fields and creates a json structure as a FlowFile. This FlowFile is used as an incoming FlowFile for PutSMS processor. Below is provided a sample Flowfile content :
+```
+{
+    "to": ["+15143334444", "+15143334445" ], 
+    "body": "SMS Message"
+}
+```
+
+## PutSms Processor
+
 
 This Processor sends SMS messages to each phone number provided in the incoming Flowfile. It uses the AWS SNS Service SDK. The incoming Flowfile has to be in a json format.
 Content of the incoming message is written to the content of the outgoing Flowfile.
@@ -19,6 +33,7 @@ Below is provided a sample Flowfile content that is required by the PutSms proce
 * **AWS Secret Key** - _\[Your Secret Key\]_
 * **AWS Region** - _\[us-east-1\]_
 
+
 ## Getting started with the project
 ### Build
 
@@ -28,6 +43,21 @@ Build the project:
 ```
 mvn clean install
 ```
+
+### Deploy
+There's a script that semi-automates the deployment of the NAR file to the Apache NiFi lib folder. Make sure you stop Apache NiFi before deploying the nar file. Restart it after the copying is done.
+
+Before running the script you should set NIFI_LIB environment variable.
+
+````
+export NIFI_LIB=/your/path/to/nifi/lib
+````
+
+
+````
+./copy-t-nifi-lib.sh
+````
+
 
 ### Requirements
 * Java 21 or later
