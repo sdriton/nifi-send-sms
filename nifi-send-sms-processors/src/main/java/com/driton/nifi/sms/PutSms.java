@@ -73,12 +73,16 @@ public class PutSms extends AbstractProcessor {
 
     public static final PropertyDescriptor AWS_SECRET_KEY = new PropertyDescriptor.Builder().name("AWS Secret Key")
             .description("AWS Secret Key for SNS").required(true).addValidator(StandardValidators.NON_BLANK_VALIDATOR)
-            .expressionLanguageSupported(ExpressionLanguageScope.ENVIRONMENT)
-            .sensitive(true).build();
+            .expressionLanguageSupported(ExpressionLanguageScope.ENVIRONMENT).sensitive(true).build();
 
     public static final PropertyDescriptor AWS_REGION = new PropertyDescriptor.Builder().name("AWS Region")
             .description("The AWS region to use").required(true).addValidator(StandardValidators.NON_BLANK_VALIDATOR)
             .defaultValue("us-east-1").build();
+
+    public static final PropertyDescriptor USE_RATE_LIMITING = new PropertyDescriptor.Builder()
+            .name("Use rate limiting.").description("The flag indicating whether to use rate limiting").required(false)
+            .allowableValues("true", "false").addValidator(StandardValidators.BOOLEAN_VALIDATOR).defaultValue("false")
+            .build();
 
     public static final Relationship REL_SUCCESS = new Relationship.Builder().name("success")
             .description("All FlowFiles that successfully send an SMS are routed to this relationship").build();
@@ -145,7 +149,7 @@ public class PutSms extends AbstractProcessor {
             // The flow will fail if an exception is thrown.
             String message = null;
             for (String phoneNumber : phoneNumbers) {
-                message = doSendSms(snsClient, phoneNumber, messageBody);
+                message = doSendSms(snsClient, context, phoneNumber, messageBody);
                 flowFileHolder[0] = session.putAttribute(flowFileHolder[0], "aws.sms.status." + phoneNumber, message);
             }
             session.transfer(flowFileHolder[0], REL_SUCCESS);
@@ -160,8 +164,8 @@ public class PutSms extends AbstractProcessor {
     }
 
     /**
-     * This method extracts the phone numbers from the "to" field represented
-     * as a JsonNode.
+     * This method extracts the phone numbers from the "to" field represented as a
+     * JsonNode.
      * 
      * @param jsonNode the JsonNode containing the phone number array.
      * @return a {@code List<String>} that contains the phone number.
@@ -190,19 +194,21 @@ public class PutSms extends AbstractProcessor {
      * @throws Exception this method throws an Exception because of the many
      *                   exceptions thrown by the SNSClient.publish() method.
      */
-    private String doSendSms(SnsClient snsClient, String phoneNumber, String messageBody) throws Exception {
+    private String doSendSms(SnsClient snsClient, ProcessContext context, String phoneNumber, String messageBody)
+            throws Exception {
         PublishRequest request = PublishRequest.builder().message(messageBody).phoneNumber(phoneNumber).build();
-        RateLimiterConfig config = 
-            RateLimiterConfig.custom()
-                .limitForPeriod(20)
-                .timeoutDuration(Duration.ofMillis(20))
-                .limitRefreshPeriod(Duration.ofMillis(20)).build();
+        PublishResponse response = null;
+        if (Boolean.TRUE.equals(context.getProperty(USE_RATE_LIMITING).asBoolean())) {
+            RateLimiterConfig config = RateLimiterConfig.custom().limitForPeriod(20)
+                    .timeoutDuration(Duration.ofMillis(20)).limitRefreshPeriod(Duration.ofMillis(20)).build();
 
-        RateLimiter limiter = RateLimiter.of("awssnscalllimiter", config);
-        Supplier<PublishResponse> sup = () -> snsClient.publish(request);
+            RateLimiter limiter = RateLimiter.of("awssnscalllimiter", config);
+            Supplier<PublishResponse> sup = () -> snsClient.publish(request);
 
-        PublishResponse response = limiter.executeSupplier(sup);
-        // PublishResponse response = snsClient.publish(request);
+            response = limiter.executeSupplier(sup);
+        } else {
+            response = snsClient.publish(request);
+        }
         String message = String.format("SMS sent to %s: %s.", phoneNumber, response.messageId());
         logger.info(message);
         return message;
