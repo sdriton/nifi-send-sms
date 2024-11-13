@@ -36,7 +36,7 @@ import io.github.cdimascio.dotenv.DotenvEntry;
 class PutSmsTest {
 
     private TestRunner testRunner;
-    private String flowFileContent = "{\"to\": [\"+11118669999\",\"+11118887779\"], \"body\": \"SMS Message.\"}";
+    private String flowFileContent = "{\"to\": [\"+5148035020\",\"+11118887779\"], \"body\": \"SMS Message.\"}";
 
     @BeforeEach
     public void init() {
