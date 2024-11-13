@@ -44,6 +44,20 @@ Build the project:
 mvn clean install
 ```
 
+### Test
+The following environment variables must be set before running tests:
+
+````
+export AWS_ACCESS_KEY=<YourAccessKey>
+export AWS_ACCESS_SECRET=<YourSecretKey>
+````
+
+Run the maven test command
+````
+mvn clean test
+````
+
+
 ### Deploy
 There's a script that semi-automates the deployment of the NAR file to the Apache NiFi lib folder. Make sure you stop Apache NiFi before deploying the nar file. Restart it after the copying is done.
 
