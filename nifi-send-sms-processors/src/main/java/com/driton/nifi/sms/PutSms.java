@@ -16,10 +16,12 @@
 package com.driton.nifi.sms;
 
 import java.io.InputStream;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.apache.nifi.annotation.behavior.InputRequirement;
 import org.apache.nifi.annotation.behavior.InputRequirement.Requirement;
@@ -43,6 +45,8 @@ import org.apache.nifi.processor.util.StandardValidators;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RateLimiterConfig;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
@@ -188,7 +192,17 @@ public class PutSms extends AbstractProcessor {
      */
     private String doSendSms(SnsClient snsClient, String phoneNumber, String messageBody) throws Exception {
         PublishRequest request = PublishRequest.builder().message(messageBody).phoneNumber(phoneNumber).build();
-        PublishResponse response = snsClient.publish(request);
+        RateLimiterConfig config =
+            RateLimiterConfig.custom()
+                .limitForPeriod(20)
+                .timeoutDuration(Duration.ofMillis(20))
+                .limitRefreshPeriod(Duration.ofMillis(20)).build();
+
+        RateLimiter limiter = RateLimiter.of("awssnscalllimiter", config);
+        Supplier<PublishResponse> sup = () -> snsClient.publish(request);
+
+        PublishResponse response = limiter.executeSupplier(sup);
+        // PublishResponse response = snsClient.publish(request);
         String message = String.format("SMS sent to %s: %s.", phoneNumber, response.messageId());
         logger.info(message);
         return message;
