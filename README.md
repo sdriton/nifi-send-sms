@@ -5,7 +5,7 @@ This project contains two processors that allow sending SMS messages:
 
 ## ExtractEmailToJson Processor
 
-This Processor extracts email message body and recepients (to) fields and creates a json structure as a FlowFile. This FlowFile is used as an incoming FlowFile for PutSMS processor. Below is provided a sample Flowfile content :
+This Processor parses a SMTP message and extracts message body and recepients (to) fields from the raw email and creates a json structure as a FlowFile. This FlowFile is used as an incoming FlowFile for PutSMS processor. Below is provided a sample Flowfile content :
 ```
 {
     "to": ["+15143334444", "+15143334445" ], 
@@ -60,6 +60,6 @@ export NIFI_LIB=/your/path/to/nifi/lib
 
 
 ### Requirements
-* Java 21 or later
+* Java 17 or later
 * Maven 3.9.9 or later
 
