@@ -69,7 +69,7 @@ export NIFI_LIB=/your/path/to/nifi/lib
 
 
 ````
-./copy-t-nifi-lib.sh
+./copy-to-nifi-lib.sh
 ````
 
 

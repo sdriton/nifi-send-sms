@@ -167,7 +167,7 @@ public class ExtractEmailToJson extends AbstractProcessor {
     /**
      * This method extracts the email body from multipart content.
      * 
-     * @param mimeMessage the MimeMessage of the email.
+     * @param multipart the Multipart contents of the email.
      * @return a {@code String} representing the body of the email.
      */
     private String getTextFromMimeMultipart(Multipart multipart) throws MessagingException, IOException {
