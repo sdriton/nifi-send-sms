@@ -95,7 +95,7 @@ public class PutSms extends AbstractProcessor {
 
     @Override
     protected void init(final ProcessorInitializationContext context) {
-        final List<PropertyDescriptor> descLst = List.of(AWS_ACCESS_KEY, AWS_SECRET_KEY, AWS_REGION);
+        final List<PropertyDescriptor> descLst = List.of(AWS_ACCESS_KEY, AWS_SECRET_KEY, AWS_REGION, USE_RATE_LIMITING);
         this.descriptors = Collections.unmodifiableList(descLst);
 
         final Set<Relationship> relLst = Set.of(REL_SUCCESS, REL_FAILURE);
