@@ -95,7 +95,7 @@ public class PutSms extends AbstractProcessor {
 
     @Override
     protected void init(final ProcessorInitializationContext context) {
-        final List<PropertyDescriptor> descLst = List.of(AWS_ACCESS_KEY, AWS_SECRET_KEY, AWS_REGION);
+        final List<PropertyDescriptor> descLst = List.of(AWS_ACCESS_KEY, AWS_SECRET_KEY, AWS_REGION, USE_RATE_LIMITING);
         this.descriptors = Collections.unmodifiableList(descLst);
 
         final Set<Relationship> relLst = Set.of(REL_SUCCESS, REL_FAILURE);
@@ -142,6 +142,22 @@ public class PutSms extends AbstractProcessor {
 
             // Extract the message body from the "body" field
             String messageBody = jsonNode.get("body").asText();
+            RateLimiter limiter = null;
+            if (Boolean.TRUE.equals(context.getProperty(USE_RATE_LIMITING).asBoolean())) {
+                // The limit of requests to AWS SNS Publish SMS is 20 requests per second.
+                int limitForPeriod = 18;
+                // The timeout between batches of 20 requests. It should be 1 second as per AWS Limits.
+                long timeoutDuration = 1500;
+                // The limit of refresh period 
+                long limitRefreshPeriod = 1500;
+                
+                RateLimiterConfig config = RateLimiterConfig.custom()
+                        .limitForPeriod(limitForPeriod)
+                        .timeoutDuration(Duration.ofMillis(timeoutDuration))
+                        .limitRefreshPeriod(Duration.ofMillis(limitRefreshPeriod)).build();
+
+                limiter = RateLimiter.of("awssnscalllimiter_rps", config);
+            }
 
             // Send SMS to each phone number
             // If send sms for a number fails just put an attribute to the flowfile and
@@ -149,7 +165,7 @@ public class PutSms extends AbstractProcessor {
             // The flow will fail if an exception is thrown.
             String message = null;
             for (String phoneNumber : phoneNumbers) {
-                message = doSendSms(snsClient, context, phoneNumber, messageBody);
+                message = doSendSms(snsClient, limiter, phoneNumber, messageBody);
                 flowFileHolder[0] = session.putAttribute(flowFileHolder[0], "aws.sms.status." + phoneNumber, message);
             }
             session.transfer(flowFileHolder[0], REL_SUCCESS);
@@ -194,21 +210,17 @@ public class PutSms extends AbstractProcessor {
      * @throws Exception this method throws an Exception because of the many
      *                   exceptions thrown by the SNSClient.publish() method.
      */
-    private String doSendSms(SnsClient snsClient, ProcessContext context, String phoneNumber, String messageBody)
+    public String doSendSms(SnsClient snsClient, RateLimiter limiter, String phoneNumber, String messageBody)
             throws Exception {
         PublishRequest request = PublishRequest.builder().message(messageBody).phoneNumber(phoneNumber).build();
         PublishResponse response = null;
-        if (Boolean.TRUE.equals(context.getProperty(USE_RATE_LIMITING).asBoolean())) {
-            RateLimiterConfig config = RateLimiterConfig.custom().limitForPeriod(20)
-                    .timeoutDuration(Duration.ofMillis(20)).limitRefreshPeriod(Duration.ofMillis(20)).build();
-
-            RateLimiter limiter = RateLimiter.of("awssnscalllimiter", config);
-            Supplier<PublishResponse> sup = () -> snsClient.publish(request);
-
-            response = limiter.executeSupplier(sup);
-        } else {
+        if (limiter == null) {
             response = snsClient.publish(request);
+        } else {
+            Supplier<PublishResponse> sup = () -> snsClient.publish(request);
+            response = limiter.executeSupplier(sup);
         }
+
         String message = String.format("SMS sent to %s: %s.", phoneNumber, response.messageId());
         logger.info(message);
         return message;
