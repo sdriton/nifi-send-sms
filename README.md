@@ -1,7 +1,7 @@
 # Description
-This project contains two processors that allow sending SMS messages:
-* ExtractEmailToJson
-* PutSMS
+This project contains two processors which can be used together to build an email to sms message integration :
+* **ExtractEmailToJson**
+* **PutSMS**
 
 ## ExtractEmailToJson Processor
 
@@ -32,6 +32,7 @@ Below is provided a sample Flowfile content that is required by the PutSms proce
 * **AWS Access Key** - _\[Your Access Key\]_
 * **AWS Secret Key** - _\[Your Secret Key\]_
 * **AWS Region** - _\[us-east-1\]_
+* **Use rate limiting** - _[true | false]_  Default is false.
 
 
 ## Getting started with the project

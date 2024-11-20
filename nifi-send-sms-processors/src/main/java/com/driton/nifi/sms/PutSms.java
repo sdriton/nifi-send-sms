@@ -80,7 +80,7 @@ public class PutSms extends AbstractProcessor {
             .defaultValue("us-east-1").build();
 
     public static final PropertyDescriptor USE_RATE_LIMITING = new PropertyDescriptor.Builder()
-            .name("Use rate limiting.").description("The flag indicating whether to use rate limiting").required(false)
+            .name("Use rate limiting").description("The flag indicating whether to use rate limiting").required(false)
             .allowableValues("true", "false").addValidator(StandardValidators.BOOLEAN_VALIDATOR).defaultValue("false")
             .build();
 
