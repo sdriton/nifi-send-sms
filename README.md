@@ -36,6 +36,10 @@ Below is provided a sample Flowfile content that is required by the PutSms proce
 
 
 ## Getting started with the project
+### Requirements
+* Java 17 or later
+* Maven 3.9.9 or later
+
 ### Build
 
 Use maven commands to compile, install and run tests or use the shell scripts build.sh to build the project and deploy the NAR Archive to the NiFi lib folder.
@@ -73,8 +77,4 @@ export NIFI_LIB=/your/path/to/nifi/lib
 ./copy-to-nifi-lib.sh
 ````
 
-
-### Requirements
-* Java 17 or later
-* Maven 3.9.9 or later
 
