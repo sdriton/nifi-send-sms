@@ -34,11 +34,15 @@ Below is provided a sample Flowfile content that is required by the PutSms proce
 * **AWS Region** - _\[us-east-1\]_
 * **Use rate limiting** - _[true | false]_  Default is false.
 
+**AWS Secrets**
+
+It's a good idea to use AWSCredentialsProviderControllerService for AWS credentials instead of 
+providing them through processor's properties.
 
 ## Getting started with the project
 ### Requirements
-* Java 17 or later
-* Maven 3.9.9 or later
+* Java 21 or later
+* Maven 3.9.11 or later
 
 ### Build
 
