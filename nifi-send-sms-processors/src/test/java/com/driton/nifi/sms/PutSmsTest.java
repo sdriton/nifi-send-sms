@@ -36,6 +36,7 @@ import org.apache.nifi.util.TestRunner;
 import org.apache.nifi.util.TestRunners;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Disabled;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import io.github.cdimascio.dotenv.DotenvEntry;
@@ -68,6 +69,7 @@ class PutSmsTest {
     }
 
     @Test
+    @Disabled("This test should be run manually with correct AWS credentials set in the environment variables.")
     void testWithWrongAWSInformation() {
         testRunner.setProperty(PutSms.AWS_ACCESS_KEY, "awsAccessKey");
         testRunner.setProperty(PutSms.AWS_SECRET_KEY, "awsAccessSecret");
@@ -93,6 +95,7 @@ class PutSmsTest {
     }
 
     @Test
+    @Disabled("This test should be run manually with correct AWS credentials set in the environment variables.")
     void testWithCorrectAWSInformation() {
         Dotenv dotEnv = null; 
         try { 

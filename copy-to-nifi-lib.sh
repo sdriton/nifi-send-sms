@@ -16,4 +16,4 @@
 
 # Export NIFI_LIB environment variable in your shell.
 
-cp ./nifi-send-sms-nar/target/nifi-send-sms-nar-2.0.0.nar ${NIFI_LIB}
+cp ./nifi-send-sms-nar/target/nifi-send-sms-nar-2.6.0.nar ${NIFI_LIB}
