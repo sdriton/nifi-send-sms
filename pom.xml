@@ -76,7 +76,7 @@
     <properties>
         <send-sms-version>2.6.0</send-sms-version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.release>25</maven.compiler.release>
+        <maven.compiler.release>21</maven.compiler.release>
     </properties>
 
     <dependencies>
